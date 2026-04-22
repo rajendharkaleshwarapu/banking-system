@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        h1 { color: #333; }
+        .section { margin-bottom: 30px; }
+        button { padding: 10px 20px; margin: 5px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        input { padding: 8px; margin: 5px; }
+        pre { background-color: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Banking System API Tester</h1>
+
+        <div class="section">
+            <h2>Customers</h2>
+            <button onclick="getAllCustomers()">Get All Customers</button>
+            <div id="customers"></div>
+        </div>
+
+        <div class="section">
+            <h2>Accounts</h2>
+            <button onclick="getAccountsByCustomer(1)">Get Accounts for Customer 1</button>
+            <div id="accounts"></div>
+        </div>
+
+        <div class="section">
+            <h2>Transactions</h2>
+            <button onclick="getTransactionsByAccount(1)">Get Transactions for Account 1</button>
+            <div id="transactions"></div>
+        </div>
+
+        <div class="section">
+            <h2>Deposit</h2>
+            <input type="number" id="depositAccountId" placeholder="Account ID" value="1">
+            <input type="number" id="depositAmount" placeholder="Amount" value="100">
+            <button onclick="deposit()">Deposit</button>
+        </div>
+
+        <div class="section">
+            <h2>Withdraw</h2>
+            <input type="number" id="withdrawAccountId" placeholder="Account ID" value="1">
+            <input type="number" id="withdrawAmount" placeholder="Amount" value="50">
+            <button onclick="withdraw()">Withdraw</button>
+        </div>
+
+        <div class="section">
+            <h2>Transfer</h2>
+            <input type="number" id="fromAccountId" placeholder="From Account ID" value="1">
+            <input type="number" id="toAccountId" placeholder="To Account ID" value="2">
+            <input type="number" id="transferAmount" placeholder="Amount" value="25">
+            <button onclick="transfer()">Transfer</button>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost:8080/api';
+        const headers = {
+            'Authorization': 'Basic ' + btoa('admin:password'),
+            'Content-Type': 'application/json'
+        };
+
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, { headers, ...options });
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                return await response.json();
+            } catch (error) {
+                alert('Error: ' + error.message);
+                return null;
+            }
+        }
+
+        async function getAllCustomers() {
+            const customers = await apiCall(`${baseUrl}/customers`);
+            document.getElementById('customers').innerHTML = '<pre>' + JSON.stringify(customers, null, 2) + '</pre>';
+        }
+
+        async function getAccountsByCustomer(customerId) {
+            const accounts = await apiCall(`${baseUrl}/accounts/customer/${customerId}`);
+            document.getElementById('accounts').innerHTML = '<pre>' + JSON.stringify(accounts, null, 2) + '</pre>';
+        }
+
+        async function getTransactionsByAccount(accountId) {
+            const transactions = await apiCall(`${baseUrl}/transactions/account/${accountId}`);
+            document.getElementById('transactions').innerHTML = '<pre>' + JSON.stringify(transactions, null, 2) + '</pre>';
+        }
+
+        async function deposit() {
+            const accountId = document.getElementById('depositAccountId').value;
+            const amount = document.getElementById('depositAmount').value;
+            await apiCall(`${baseUrl}/accounts/${accountId}/deposit`, {
+                method: 'POST',
+                body: JSON.stringify({ amount: parseFloat(amount) })
+            });
+            alert('Deposit successful');
+        }
+
+        async function withdraw() {
+            const accountId = document.getElementById('withdrawAccountId').value;
+            const amount = document.getElementById('withdrawAmount').value;
+            await apiCall(`${baseUrl}/accounts/${accountId}/withdraw`, {
+                method: 'POST',
+                body: JSON.stringify({ amount: parseFloat(amount) })
+            });
+            alert('Withdrawal successful');
+        }
+
+        async function transfer() {
+            const fromAccountId = document.getElementById('fromAccountId').value;
+            const toAccountId = document.getElementById('toAccountId').value;
+            const amount = document.getElementById('transferAmount').value;
+            await apiCall(`${baseUrl}/accounts/transfer`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    fromAccountId: parseInt(fromAccountId),
+                    toAccountId: parseInt(toAccountId),
+                    amount: parseFloat(amount)
+                })
+            });
+            alert('Transfer successful');
+        }
+    </script>
+</body>
+</html>
